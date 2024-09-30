@@ -17,7 +17,7 @@ if res.status_code == 200:
 else:
     fail("Login Failed...")
 
-flag = "DH{ffd48"
+flag = "DH{"
 lower_hexdigits = hexdigits[:-6]
 
 for hexdigit in lower_hexdigits:
@@ -30,4 +30,4 @@ info(f"Current flag: {flag}")
 info("Check the Request Bin for the next character and update the flag manually.")
 info(f"Final flag: {flag}")
 
-// 지금 테스트 중임 맞는 코드인지 확인중 
+// DH{ + FLAG 값을 넣으세요 예시 ) DH{example
