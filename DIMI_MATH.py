@@ -4,7 +4,7 @@ import socket
 
 def main():
 
-  HOST='192.168.100.153'
+  HOST='192.168.100.153' #당신 의 ip주소 실제 대회에서는 대회주소
   PORT=8231 
   s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   s.connect((HOST,PORT))
